@@ -368,7 +368,7 @@ All methods accept MongoDB native options as the last parameter.
 
 ## Documentation
 
-Full documentation is available at [https://mondel.dev](https://mondel.dev) _(coming soon)_
+Full documentation is available at [https://mondel-orm.pages.dev](https://mondel-orm.pages.dev)
 
 ## Contributing
 

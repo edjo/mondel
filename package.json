@@ -1,6 +1,6 @@
 {
   "name": "mondel",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Lightweight TypeScript ORM for MongoDB - Type-safe, serverless-optimized",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -49,7 +49,7 @@
     "type": "git",
     "url": "https://github.com/edjo/mondel.git"
   },
-  "homepage": "https://github.com/edjo/mondel#readme",
+  "homepage": "https://mondel-orm.pages.dev/",
   "bugs": {
     "url": "https://github.com/edjo/mondel/issues"
   },
