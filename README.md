@@ -376,11 +376,10 @@ Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
 
 ## License
 
-MIT © [Your Name]
+MIT © [Edjo](https://github.com/edjo)
 
 ---
 
 <p align="center">
   Made with ❤️ for the MongoDB community
 </p>
-````
