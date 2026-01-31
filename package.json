@@ -1,0 +1,77 @@
+{
+  "name": "mondel",
+  "version": "0.1.0",
+  "description": "Lightweight TypeScript ORM for MongoDB - Type-safe, serverless-optimized",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mongodb",
+    "orm",
+    "typescript",
+    "zod",
+    "cloudflare-workers",
+    "serverless",
+    "edge",
+    "database",
+    "odm",
+    "schema",
+    "validation"
+  ],
+  "author": "Edjo",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/edjo/mondel.git"
+  },
+  "homepage": "https://github.com/edjo/mondel#readme",
+  "bugs": {
+    "url": "https://github.com/edjo/mondel/issues"
+  },
+  "peerDependencies": {
+    "mongodb": "^6.0.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.55.0",
+    "mongodb": "^6.12.0",
+    "prettier": "^3.1.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitepress": "^1.6.4",
+    "vitest": "^1.0.0",
+    "vue": "^3.5.27",
+    "zod": "^3.24.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

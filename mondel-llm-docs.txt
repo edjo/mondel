@@ -1,0 +1,579 @@
+# MONDEL - Lightweight TypeScript ORM for MongoDB
+# LLM Reference Documentation
+
+================================================================================
+## OVERVIEW
+================================================================================
+
+Mondel is a lightweight, 100% type-safe TypeScript ORM for MongoDB, optimized 
+for serverless environments (Cloudflare Workers, Vercel Edge, AWS Lambda).
+
+Key Features:
+- 100% Type-safe: Schema names, field names, and return types are strictly typed
+- Serverless-first: ~17KB bundle, fast cold starts, edge-compatible
+- MongoDB Native: Full access to MongoDB driver options (upsert, sessions, transactions)
+- Zod Validation: Built-in runtime validation with configurable modes
+- Zero Magic: No decorators, no reflection, explicit and predictable
+
+================================================================================
+## INSTALLATION
+================================================================================
+
+npm install mondel mongodb zod
+yarn add mondel mongodb zod
+pnpm add mondel mongodb zod
+
+Requirements:
+- Node.js 18+
+- MongoDB 6.0+
+- TypeScript 5.0+ (recommended)
+
+================================================================================
+## SCHEMA DEFINITION
+================================================================================
+
+Schemas are defined using `defineSchema` and the `s` field builder:
+
+```typescript
+import { defineSchema, s } from "mondel";
+
+export const userSchema = defineSchema("users", {
+  collection: "users",        // MongoDB collection name
+  timestamps: true,           // Auto createdAt/updatedAt
+  fields: {
+    _id: s.objectId().default("auto"),
+    email: s.string().required().unique().index({ name: "idx_email" }),
+    name: s.string(),
+    role: s.enum(["ADMIN", "USER", "GUEST"]).default("USER"),
+    age: s.number().min(0).max(150),
+    isActive: s.boolean().default(true),
+    profile: s.object({
+      bio: s.string(),
+      avatar: s.string().url(),
+    }),
+    tags: s.array(s.string()),
+  },
+  indexes: [
+    { fields: { role: 1, createdAt: -1 }, options: { name: "idx_role_created" } }
+  ]
+});
+
+// Export schemas array for client (IMPORTANT: use `as const` for type inference)
+export const schemas = [userSchema] as const;
+```
+
+### Field Types
+
+| Type       | Builder             | Description                    |
+|------------|---------------------|--------------------------------|
+| String     | s.string()          | String with validations        |
+| Number     | s.number()          | Numeric with min/max           |
+| Boolean    | s.boolean()         | Boolean field                  |
+| Date       | s.date()            | Date field                     |
+| ObjectId   | s.objectId()        | MongoDB ObjectId               |
+| Array      | s.array(itemType)   | Array of typed items           |
+| Object     | s.object({...})     | Nested object                  |
+| JSON       | s.json()            | Arbitrary JSON                 |
+| Enum       | s.enum([...])       | String enum validation         |
+| Literal    | s.literal(value)    | Literal value                  |
+
+### Field Modifiers
+
+s.string()
+  .required()                    // Field is mandatory
+  .unique()                      // Unique constraint (creates index)
+  .default("value")              // Default value
+  .index()                       // Create index
+  .index({ name: "idx" })        // Named index
+  .index({ type: "text" })       // Text index for search
+  .index({ type: "2dsphere" })   // Geospatial index
+  .index({ expireAfterSeconds: 3600 })  // TTL index
+  .min(1).max(100)               // Length/value constraints
+  .email()                       // Email validation
+  .url()                         // URL validation
+  .pattern(/regex/)              // Regex pattern
+
+================================================================================
+## CLIENT CREATION
+================================================================================
+
+### Serverless Mode (Cloudflare Workers, Vercel Edge)
+
+```typescript
+import { createClient, type SchemasToClient } from "mondel";
+import { schemas } from "./schemas";
+
+// Type for the connected client
+export type MondelClient = SchemasToClient<typeof schemas>;
+
+// Create factory (no connection yet)
+const connectDb = createClient({
+  serverless: true,
+  schemas,
+  syncIndexes: false,     // Recommended false for serverless
+  validation: "strict"    // "strict" | "loose" | "off"
+});
+
+// In request handler - connect when needed
+export async function getMondelClient(env: { MONGODB_URI: string }) {
+  return connectDb(env.MONGODB_URI);
+}
+```
+
+### Node.js Mode (Traditional Servers, Scripts)
+
+```typescript
+import { createClient } from "mondel";
+import { schemas } from "./schemas";
+
+const db = await createClient({
+  uri: process.env.MONGODB_URI!,
+  schemas,
+  syncIndexes: true,
+  validation: "strict",
+  options: { maxPoolSize: 10 }  // MongoDB driver options
+});
+```
+
+================================================================================
+## CRUD OPERATIONS
+================================================================================
+
+All methods are type-safe and accept MongoDB native options.
+
+### findOne(where?, options?)
+
+Find a single document.
+
+```typescript
+// Simple find
+const user = await db.users.findOne({ email: "john@example.com" });
+
+// With field selection
+const user = await db.users.findOne(
+  { email: "john@example.com" },
+  { select: { _id: true, email: true, name: true } }
+);
+
+// With session (transactions)
+const user = await db.users.findOne({ email }, { session });
+```
+
+### findMany(where?, options?)
+
+Find multiple documents.
+
+```typescript
+// Find all active users
+const users = await db.users.findMany({ isActive: true });
+
+// With pagination and sorting
+const users = await db.users.findMany(
+  { role: "ADMIN" },
+  {
+    select: { _id: true, email: true, name: true },
+    sort: { createdAt: -1 },
+    skip: 0,
+    limit: 10
+  }
+);
+
+// Using MongoDB operators
+const users = await db.users.findMany({
+  age: { $gte: 18, $lte: 65 },
+  role: { $in: ["ADMIN", "MODERATOR"] },
+  deletedAt: { $exists: false }
+});
+```
+
+### findById(id, options?)
+
+Find document by _id.
+
+```typescript
+const user = await db.users.findById("507f1f77bcf86cd799439011");
+const user = await db.users.findById(new ObjectId("..."));
+const user = await db.users.findById(userId, { select: { email: true } });
+```
+
+### create(data, options?)
+
+Create a new document. Auto-validates and adds timestamps.
+
+```typescript
+const result = await db.users.create({
+  email: "john@example.com",
+  name: "John Doe",
+  role: "USER"
+});
+console.log(result.insertedId);  // ObjectId
+
+// Disable timestamps
+await db.users.create(data, { timestamps: false });
+
+// With session
+await db.users.create(data, { session });
+```
+
+### createMany(data[], options?)
+
+Create multiple documents.
+
+```typescript
+const result = await db.users.createMany([
+  { email: "user1@example.com", name: "User 1" },
+  { email: "user2@example.com", name: "User 2" }
+]);
+console.log(result.insertedIds);  // { 0: ObjectId, 1: ObjectId }
+```
+
+### updateOne(where, data, options?)
+
+Update single document. Supports MongoDB operators.
+
+```typescript
+// Simple update (auto-wrapped in $set)
+await db.users.updateOne(
+  { email: "john@example.com" },
+  { name: "John Smith" }
+);
+
+// Using MongoDB operators
+await db.users.updateOne(
+  { _id: userId },
+  { $set: { name: "John" }, $inc: { loginCount: 1 } }
+);
+
+// Upsert - create if not exists
+await db.users.updateOne(
+  { email: "john@example.com" },
+  { $set: { name: "John", isActive: true } },
+  { upsert: true }
+);
+
+// With session (transactions)
+await db.users.updateOne(filter, update, { session });
+```
+
+### updateMany(where, data, options?)
+
+Update multiple documents.
+
+```typescript
+// Deactivate expired users
+await db.users.updateMany(
+  { subscriptionExpiry: { $lt: new Date() } },
+  { $set: { isActive: false } }
+);
+
+// Increment for all admins
+await db.users.updateMany(
+  { role: "ADMIN" },
+  { $inc: { notificationCount: 1 } }
+);
+```
+
+### updateById(id, data, options?)
+
+Update by _id (convenience wrapper).
+
+```typescript
+await db.users.updateById(userId, { name: "New Name" });
+await db.users.updateById(userId, { $push: { tags: "premium" } });
+```
+
+### deleteOne(where, options?)
+
+Delete single document.
+
+```typescript
+await db.users.deleteOne({ email: "john@example.com" });
+await db.users.deleteOne({ _id: userId }, { session });
+```
+
+### deleteMany(where, options?)
+
+Delete multiple documents.
+
+```typescript
+const result = await db.users.deleteMany({ isActive: false });
+console.log(`Deleted ${result.deletedCount} users`);
+
+await db.users.deleteMany({ createdAt: { $lt: new Date("2023-01-01") } });
+```
+
+### deleteById(id, options?)
+
+Delete by _id.
+
+```typescript
+await db.users.deleteById("507f1f77bcf86cd799439011");
+```
+
+### count(where?, options?)
+
+Count documents.
+
+```typescript
+const total = await db.users.count();
+const activeCount = await db.users.count({ isActive: true });
+```
+
+### exists(where, options?)
+
+Check if document exists (optimized).
+
+```typescript
+const emailTaken = await db.users.exists({ email: "john@example.com" });
+const isAdmin = await db.users.exists({ _id: userId, role: "ADMIN" });
+```
+
+### aggregate(pipeline, options?)
+
+Run aggregation pipeline.
+
+```typescript
+// Group by role
+const stats = await db.users.aggregate([
+  { $match: { isActive: true } },
+  { $group: { _id: "$role", count: { $sum: 1 } } },
+  { $sort: { count: -1 } }
+]);
+
+// Lookup (join)
+const usersWithPosts = await db.users.aggregate([
+  { $lookup: {
+      from: "posts",
+      localField: "_id",
+      foreignField: "authorId",
+      as: "posts"
+  }}
+]);
+
+// With options
+const result = await db.users.aggregate(pipeline, { allowDiskUse: true });
+```
+
+### getCollection()
+
+Get underlying MongoDB Collection for advanced operations.
+
+```typescript
+const collection = db.users.getCollection();
+const changeStream = collection.watch();
+await collection.bulkWrite([...]);
+```
+
+================================================================================
+## TRANSACTIONS
+================================================================================
+
+Use MongoDB sessions for transactions:
+
+```typescript
+import { MongoClient } from "mongodb";
+
+const client = new MongoClient(uri);
+const session = client.startSession();
+
+try {
+  await session.withTransaction(async () => {
+    await db.users.create({ email: "new@example.com" }, { session });
+    await db.posts.create({ title: "First Post", authorId: userId }, { session });
+  });
+} finally {
+  await session.endSession();
+}
+```
+
+================================================================================
+## VALIDATION MODES
+================================================================================
+
+- "strict" (default): Throws error on validation failure
+- "loose": Logs warning but continues
+- "off": No runtime validation (TypeScript still enforces types)
+
+```typescript
+const db = await createClient({
+  uri: process.env.MONGODB_URI,
+  schemas,
+  validation: "strict"  // or "loose" or "off"
+});
+```
+
+================================================================================
+## TYPE SAFETY EXAMPLES
+================================================================================
+
+```typescript
+// ✅ Works - 'users' is a registered schema
+db.users.findMany({});
+
+// ❌ TypeScript error - 'rooms' doesn't exist
+db.rooms.findMany({});
+// Error: Property 'rooms' does not exist on type 'MondelClient'
+
+// ❌ TypeScript error - 'invalidField' doesn't exist
+db.users.findMany({}, { select: { invalidField: true } });
+// Error: 'invalidField' does not exist in type 'SelectInput<...>'
+
+// ✅ Return types are correctly inferred
+const users = await db.users.findMany({});
+users.map(user => user.email);  // string - correctly typed!
+```
+
+================================================================================
+## CLIENT METHODS
+================================================================================
+
+```typescript
+// Close connection
+await db.close();
+
+// Get underlying MongoDB Db instance
+const mongoDb = db.getDb();
+```
+
+================================================================================
+## COMMON PATTERNS
+================================================================================
+
+### Cloudflare Workers Setup
+
+```typescript
+// schemas/index.ts
+import { userSchema } from "./user.schema";
+import { postSchema } from "./post.schema";
+export const schemas = [userSchema, postSchema] as const;
+
+// database/mondel.ts
+import { createClient, type SchemasToClient } from "mondel";
+import { schemas } from "../schemas";
+
+export type MondelClient = SchemasToClient<typeof schemas>;
+
+const connectDb = createClient({
+  serverless: true,
+  schemas,
+  syncIndexes: false,
+  validation: "strict"
+});
+
+export async function getMondelClient(env: { MAIN_DB_URI: string }) {
+  if (!env.MAIN_DB_URI) throw new Error("MAIN_DB_URI not defined");
+  return connectDb(env.MAIN_DB_URI);
+}
+
+// worker.ts
+export default {
+  async fetch(request: Request, env: Env) {
+    const db = await getMondelClient(env);
+    const users = await db.users.findMany({ isActive: true });
+    return Response.json(users);
+  }
+};
+```
+
+### Service Pattern
+
+```typescript
+export class UserService {
+  async findAll(env: Env) {
+    const db = await getMondelClient(env);
+    return db.users.findMany(
+      { isActive: true },
+      {
+        select: { _id: true, email: true, name: true },
+        sort: { createdAt: -1 },
+        limit: 100
+      }
+    );
+  }
+
+  async findById(env: Env, id: string) {
+    if (!ObjectId.isValid(id)) return null;
+    const db = await getMondelClient(env);
+    return db.users.findById(id);
+  }
+
+  async create(env: Env, data: CreateUserDto) {
+    const db = await getMondelClient(env);
+    return db.users.create(data);
+  }
+
+  async update(env: Env, id: string, data: UpdateUserDto) {
+    const db = await getMondelClient(env);
+    return db.users.updateById(id, { $set: data });
+  }
+
+  async delete(env: Env, id: string) {
+    const db = await getMondelClient(env);
+    return db.users.deleteById(id);
+  }
+}
+```
+
+================================================================================
+## MONGODB FILTER OPERATORS REFERENCE
+================================================================================
+
+Comparison:
+  $eq, $ne       - Equal, Not equal
+  $gt, $gte      - Greater than (or equal)
+  $lt, $lte      - Less than (or equal)
+  $in, $nin      - In array, Not in array
+
+Logical:
+  $and, $or, $not, $nor
+
+Element:
+  $exists        - Field exists
+  $type          - BSON type
+
+Array:
+  $all           - Match all elements
+  $elemMatch     - Match element conditions
+  $size          - Array size
+
+Text:
+  $text          - Text search
+  $regex         - Regular expression
+
+================================================================================
+## MONGODB UPDATE OPERATORS REFERENCE
+================================================================================
+
+Field:
+  $set           - Set field value
+  $unset         - Remove field
+  $inc           - Increment number
+  $mul           - Multiply number
+  $min, $max     - Update if less/greater
+  $rename        - Rename field
+  $setOnInsert   - Set only on insert (upsert)
+
+Array:
+  $push          - Add to array
+  $pop           - Remove first/last
+  $pull          - Remove matching elements
+  $addToSet      - Add unique to array
+  $each          - Modify multiple (with $push/$addToSet)
+
+================================================================================
+## ERROR HANDLING
+================================================================================
+
+```typescript
+try {
+  await db.users.create({ email: "invalid" });
+} catch (error) {
+  if (error.message.includes("Validation failed")) {
+    // Zod validation error
+  } else if (error.code === 11000) {
+    // MongoDB duplicate key error
+  }
+}
+```
+
+================================================================================
