@@ -39,7 +39,7 @@ const activeTab = ref('schema')
     <button :class="{ active: activeTab === 'query' }" @click="activeTab = 'query'">3. Query</button>
   </div>
 
-  <div v-if="activeTab === 'schema'" class="code-block">
+  <div v-show="activeTab === 'schema'" class="code-block">
 
 ```typescript
 // purely functional schema definition
@@ -60,7 +60,7 @@ export const userSchema = defineSchema("users", {
 
   </div>
 
-  <div v-if="activeTab === 'client'" class="code-block">
+  <div v-show="activeTab === 'client'" class="code-block">
 
 ```typescript
 // optimized for serverless edge environments
@@ -79,7 +79,7 @@ const db = await connect(env.MONGO_URI);
 
   </div>
 
-  <div v-if="activeTab === 'query'" class="code-block">
+  <div v-show="activeTab === 'query'" class="code-block">
 
 ```typescript
 // fully typed results based on schema
