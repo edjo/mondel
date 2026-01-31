@@ -105,6 +105,7 @@ console.log(user.password);
   background-color: var(--vp-c-bg-soft);
   overflow: hidden;
   border: 1px solid var(--vp-c-divider);
+  /*  */
 }
 
 .tabs {

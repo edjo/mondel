@@ -49,7 +49,7 @@
     "type": "git",
     "url": "https://github.com/edjo/mondel.git"
   },
-  "homepage": "https://mondel-orm.pages.dev/",
+  "homepage": "https://mondel-orm.pages.dev",
   "bugs": {
     "url": "https://github.com/edjo/mondel/issues"
   },
