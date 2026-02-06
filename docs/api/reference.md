@@ -22,11 +22,13 @@ function createClient<S extends Schema[]>(
 | `serverless`  | `boolean`                      | Set to `true` to optimize for serverless environments (returns a factory).                               |
 | `uri`         | `string`                       | MongoDB connection URI. Required if `serverless: false`.                                                 |
 | `validation`  | `"strict" \| "loose" \| "off"` | Runtime validation strictness mode. Defaults to `"strict"`.                                              |
-| `syncIndexes` | `boolean`                      | Whether to automatically create indexes on connection. Defaults to `true` (Node) / `false` (Serverless). |
+| `syncIndexes` | `boolean`                      | Whether to automatically create indexes on connection. Defaults to `false` in both modes. |
 
 ## `defineSchema`
 
 Defines a schema for a collection.
+
+`schema` is available as an alias of `defineSchema`.
 
 ### Signature
 
@@ -63,7 +65,6 @@ A collection of helper functions to build field definitions.
 Most field types support chainable modifiers:
 
 - `.required()`: Makes the field non-nullable.
-- `.optional()`: Makes the field optional (default).
 - `.unique()`: Adds a unique index constraint.
 - `.default(value)`: Sets a default value.
 - `.index(options)`: Adds a single-field index.

@@ -70,6 +70,9 @@ npm run format
 
 # Type check
 npm run typecheck
+
+# Type check documentation snippets
+npm run docs:typecheck
 ```
 
 ### Testing
@@ -87,6 +90,9 @@ npm run test:coverage
 
 # Type check
 npm run typecheck
+
+# Type check documentation snippets
+npm run docs:typecheck
 ```
 
 ## Architecture Notes

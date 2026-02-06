@@ -138,7 +138,7 @@ This prevents common bugs where you over-fetch data or try to access fields you 
 Because Mondel is a thin wrapper, you have full access to MongoDB native features like sessions and collation.
 
 ```typescript
-const session = client.startSession();
+const session = db.startSession();
 
 try {
   await session.withTransaction(async () => {

@@ -60,6 +60,8 @@ logs
 .cache/
 .parcel-cache/
 .eslintcache
+docs/.vitepress/cache/
+docs/.vitepress/dist/
 
 # Temporary folders
 tmp/

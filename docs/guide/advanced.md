@@ -63,7 +63,7 @@ Extend field validation with Zod refinements:
 ```typescript
 import { z } from "zod";
 
-const userSchema = schema("users", {
+const userSchema = defineSchema("users", {
   fields: {
     email: s.string().required().email(),
     password: s.string().required().min(8),
@@ -120,7 +120,7 @@ const typedStats = await db.orders.aggregate<UserStats>(pipeline);
 ### Field-Level Indexes
 
 ```typescript
-const userSchema = schema("users", {
+const userSchema = defineSchema("users", {
   fields: {
     email: s.string().required().unique(), // Unique index
     name: s.string().index(),              // Regular index
@@ -139,7 +139,7 @@ const userSchema = schema("users", {
 ### Compound Indexes
 
 ```typescript
-const userSchema = schema("users", {
+const userSchema = defineSchema("users", {
   fields: { /* ... */ },
   indexes: [
     // Compound index for common queries

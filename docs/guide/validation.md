@@ -26,7 +26,7 @@ const client = createClient({
 
 - **`strict` (Default)**: Throws a `ZodError` immediately if validation fails. This guarantees 100% data integrity but has a slight performance cost.
 - **`loose`**: Logs a warning to the console if validation fails, but proceeds with the operation. Useful for gradual migrations or development.
-- **`off`**: Disables runtime validation completely. rely solely on TypeScript. Good for maximum performance in trusted environments.
+- **`off`**: Disables runtime validation completely. Rely solely on TypeScript. Good for maximum performance in trusted environments.
 
 ## Performance Considerations
 
