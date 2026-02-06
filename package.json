@@ -1,6 +1,6 @@
 {
   "name": "mondel",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Lightweight TypeScript ORM for MongoDB - Type-safe, serverless-optimized",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
