@@ -58,7 +58,7 @@ export class CollectionProxy<TSchema extends Schema> {
 
     if (!result.success) {
       if (this.validationMode === "strict") {
-        throw new Error(`Validation failed: ${result.error.message}`);
+        throw result.error;
       }
       console.warn(`Validation warning: ${result.error.message}`);
     }
@@ -72,7 +72,7 @@ export class CollectionProxy<TSchema extends Schema> {
 
     if (!result.success) {
       if (this.validationMode === "strict") {
-        throw new Error(`Validation failed: ${result.error.message}`);
+        throw result.error;
       }
       console.warn(`Validation warning: ${result.error.message}`);
     }
@@ -108,6 +108,9 @@ export class CollectionProxy<TSchema extends Schema> {
     options?: FindOptions<TSchema>
   ): Promise<WithId<Document> | null> {
     const mongoOptions: MongoFindOptions = {};
+    if (options?.session) {
+      mongoOptions.session = options.session;
+    }
 
     if (options?.select) {
       mongoOptions.projection = options.select as Document;
@@ -153,7 +156,12 @@ export class CollectionProxy<TSchema extends Schema> {
     where: Filter<Document> = {},
     options?: FindOptions<TSchema>
   ): Promise<WithId<Document>[]> {
-    let cursor = this.collection.find(where);
+    const mongoOptions: MongoFindOptions = {};
+    if (options?.session) {
+      mongoOptions.session = options.session;
+    }
+
+    let cursor = this.collection.find(where, mongoOptions);
 
     if (options?.select) {
       cursor = cursor.project(options.select as Document);
@@ -238,7 +246,9 @@ export class CollectionProxy<TSchema extends Schema> {
   ): Promise<InsertOneResult> {
     this.validateCreate(data);
     const doc = this.applyTimestamps(data, "create", options?.timestamps);
-    return this.collection.insertOne(doc);
+    const { timestamps: _timestamps, ...mongoOptions } = options || {};
+    void _timestamps;
+    return this.collection.insertOne(doc, mongoOptions);
   }
 
   /**

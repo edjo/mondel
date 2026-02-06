@@ -240,7 +240,7 @@ Mondel automatically infers TypeScript types from your schema. The `_id` field i
 ```typescript
 import type { InferSchemaType } from "mondel";
 
-const userSchema = schema("users", {
+const userSchema = defineSchema("users", {
   timestamps: true,
   fields: {
     // _id is implicit - no need to define it
@@ -277,9 +277,9 @@ type User = InferSchemaType<typeof userSchema>;
 ## Complete Example
 
 ```typescript
-import { schema, s } from "mondel";
+import { defineSchema, s } from "mondel";
 
-export const productSchema = schema("products", {
+export const productSchema = defineSchema("products", {
   collection: "products",
   timestamps: true,
   fields: {

@@ -7,9 +7,9 @@ MongoDB provides powerful geospatial query capabilities. This guide shows how to
 Define a schema with a geospatial index:
 
 ```typescript
-import { schema, s, createClient } from "mondel";
+import { defineSchema, s, createClient } from "mondel";
 
-const storeSchema = schema("stores", {
+const storeSchema = defineSchema("stores", {
   timestamps: true,
   fields: {
     name: s.string().required(),
@@ -156,7 +156,7 @@ const storesInArea = await collection.find({
 Combine text search with geospatial queries:
 
 ```typescript
-const storeSchema = schema("stores", {
+const storeSchema = defineSchema("stores", {
   fields: {
     name: s.string().required().index({ type: "text" }),
     description: s.string().index({ type: "text" }),
@@ -187,7 +187,7 @@ const results = await db.stores.aggregate([
 Check if a delivery address is within service area:
 
 ```typescript
-const zoneSchema = schema("deliveryZones", {
+const zoneSchema = defineSchema("deliveryZones", {
   fields: {
     name: s.string().required(),
     area: s.object({
