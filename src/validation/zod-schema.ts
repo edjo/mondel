@@ -58,7 +58,7 @@ function buildArraySchema(field: FieldDefinition): ZodTypeAny {
  */
 function buildObjectSchema(field: FieldDefinition): ZodTypeAny {
   if (!field.properties) {
-    return z.record(z.unknown());
+    return z.record(z.string(), z.unknown());
   }
 
   const shape: Record<string, ZodTypeAny> = {};
