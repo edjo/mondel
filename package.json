@@ -1,6 +1,6 @@
 {
   "name": "mondel",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Lightweight TypeScript ORM for MongoDB - Type-safe, serverless-optimized",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -56,7 +56,7 @@
   },
   "peerDependencies": {
     "mongodb": "^6.0.0 || ^7.0.0",
-    "zod": "^3.24.0"
+    "zod": "^3.24.0 || ^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
@@ -70,7 +70,7 @@
     "vitepress": "^1.6.4",
     "vitest": "^1.0.0",
     "vue": "^3.5.27",
-    "zod": "^3.24.0"
+    "zod": "^4.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
