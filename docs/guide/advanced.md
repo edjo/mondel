@@ -188,7 +188,6 @@ const analyticsDb = await createClient({
 const reportsDb = await createClient({
   uri: process.env.READONLY_DB_URI,
   schemas: [userSchema, orderSchema] as const,
-  syncIndexes: false, // Don't sync indexes on replica
 });
 ```
 

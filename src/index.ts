@@ -3,6 +3,7 @@
 // ============================================================
 export { schema, defineSchema, s } from "./schema";
 export { createClient } from "./client";
+export { syncSchemaIndexes, pullDatabaseSchema, manifestToMondelSchemaTs } from "./kit/index";
 
 // ============================================================
 // Validation Utilities
@@ -44,6 +45,12 @@ export type {
   // MongoDB types
   ClientSession,
 } from "./types";
+export type {
+  PulledSchemaManifest,
+  PulledCollectionManifest,
+  SyncSchemaOptions,
+} from "./kit/index";
+export type { MondelCliConfig, MondelPullConfig, MondelPushConfig, MondelPullFormat } from "./cli/types";
 
 export type {
   ServerlessClientConfig,
