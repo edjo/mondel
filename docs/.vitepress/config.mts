@@ -27,10 +27,12 @@ export default defineConfig({
         text: "Guide",
         items: [
           { text: "Schema Definition", link: "/guide/schema-definition" },
+          { text: "Mondel CLI", link: "/guide/cli" },
           { text: "CRUD Operations", link: "/guide/queries" },
           { text: "Validation", link: "/guide/validation" },
           { text: "Transactions", link: "/guide/transactions" },
           { text: "Advanced Features", link: "/guide/advanced" },
+          { text: "LLM Reference", link: "/guide/llm-reference" },
         ],
       },
       {

@@ -15,7 +15,6 @@ const db = await createClient({
   serverless: false, // important: node mode
   uri: process.env.MONGODB_URI,
   schemas: [userSchema],
-  syncIndexes: true, // create indexes on startup
 });
 
 // Now `db` is fully connected and ready
@@ -25,6 +24,12 @@ app.get("/users", async (req, res) => {
   const users = await db.users.findMany({});
   res.json(users);
 });
+```
+
+Run schema sync separately (deploy step, CI, or local script):
+
+```bash
+npx mondel push --uri "$MONGODB_URI" --schema ./dist/schema.js --apply-validators
 ```
 
 ### Express Middleware Pattern

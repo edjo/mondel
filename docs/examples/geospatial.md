@@ -31,7 +31,6 @@ const storeSchema = defineSchema("stores", {
 const db = await createClient({
   uri: process.env.MONGODB_URI,
   schemas: [storeSchema] as const,
-  syncIndexes: true, // Creates the 2dsphere index
 });
 
 // Create stores with coordinates [longitude, latitude]
@@ -51,6 +50,12 @@ await db.stores.createMany([
     rating: 4.2,
   },
 ]);
+```
+
+Then sync indexes once:
+
+```bash
+npx mondel push --uri "$MONGODB_URI" --schema ./dist/store-schema.js
 ```
 
 ::: warning Coordinate Order

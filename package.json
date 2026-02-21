@@ -1,16 +1,19 @@
 {
   "name": "mondel",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Lightweight TypeScript ORM for MongoDB - Type-safe, serverless-optimized",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
     }
+  },
+  "bin": {
+    "mondel": "./dist/cli/index.js"
   },
   "files": [
     "dist",
@@ -29,6 +32,7 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
+    "cli": "node ./dist/cli/index.js",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

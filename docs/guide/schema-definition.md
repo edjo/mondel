@@ -86,6 +86,12 @@ indexes: [
 ];
 ```
 
+Apply schema indexes/validators with CLI (recommended) instead of startup sync:
+
+```bash
+npx mondel push --uri "$MONGODB_URI" --schema ./dist/schemas.js --apply-validators
+```
+
 ## Type Inference
 
 You can extract the full TypeScript type of your schema using `InferSchemaType`.

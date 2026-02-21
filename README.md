@@ -31,6 +31,7 @@
 - **MongoDB Native** — Full access to MongoDB driver options (upsert, sessions, transactions)
 - **Zod Integration** — Built-in runtime validation with Zod schemas
 - **Intuitive API** — Prisma-inspired CRUD operations, Drizzle-inspired schema definition
+- **CLI Pull/Push** — Pull schema from remote DB and push indexes/validators via scripts or CI
 
 ## Installation
 
@@ -88,7 +89,6 @@ export type DbClient = SchemasToClient<typeof schemas>;
 const connectDb = createClient({
   serverless: true,
   schemas,
-  syncIndexes: false,
   validation: "strict",
 });
 
@@ -247,7 +247,6 @@ const mainDb = await createClient({
 const analyticsDb = await createClient({
   uri: process.env.ANALYTICS_DB_URI,
   schemas: [eventSchema, metricSchema] as const,
-  syncIndexes: false, // Don't sync indexes on replica
 });
 
 // Use them independently
@@ -326,7 +325,6 @@ Creates a database client. Supports two modes:
 const connectDb = createClient({
   serverless: true,
   schemas: [userSchema] as const,
-  syncIndexes: false,
   validation: "strict",
 });
 
@@ -340,10 +338,38 @@ const db = await connectDb(env.MONGODB_URI);
 const db = await createClient({
   uri: process.env.MONGODB_URI,
   schemas: [userSchema] as const,
-  syncIndexes: true,
   validation: "strict",
 });
 ```
+
+### Schema Push/Pull CLI
+
+Use `npx mondel` to synchronize indexes and MongoDB validators outside application startup.
+
+Config file with TypeScript + dotenv:
+
+```ts
+import "dotenv/config";
+import type { MondelCliConfig } from "mondel";
+
+export default {
+  uri: process.env.MONGODB_URI,
+  pull: { outDir: "./src/db/schemas", perCollectionFiles: true },
+  push: { schemaFile: "./dist/schemas.js", applyValidators: true },
+} satisfies MondelCliConfig;
+```
+
+```bash
+# Config-first usage
+npx mondel pull --config ./mondel.config.ts
+npx mondel push --config ./mondel.config.ts
+
+# Direct usage without config
+npx mondel pull --uri mongodb://localhost:27017/mydb --out ./src/db/pulled-schema.ts --format ts
+npx mondel push --uri mongodb://localhost:27017/mydb --schema ./dist/schemas.js --apply-validators
+```
+
+`syncIndexes` still works for backward compatibility but is now deprecated.
 
 ### Collection Methods
 

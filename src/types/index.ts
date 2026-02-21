@@ -110,6 +110,9 @@ export interface ManagerConfig<
   uri: string;
   options?: MongoClientOptions;
   schemas: TSchemas;
+  /**
+   * @deprecated Avoid syncing indexes during startup. Prefer `mondel push` or a dedicated sync script.
+   */
   syncIndexes?: boolean;
   validation?: ValidationMode;
 }

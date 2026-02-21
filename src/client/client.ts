@@ -2,14 +2,12 @@ import {
   MongoClient,
   type Db,
   type MongoClientOptions,
-  type IndexSpecification,
-  type CreateIndexesOptions,
   type ClientSession,
   type ClientSessionOptions,
 } from "mongodb";
 import { CollectionProxy } from "../manager/collection-proxy";
 import type { Schema, ValidationMode, SchemaToCollectionProxy, FieldDefinition } from "../types";
-import { getFieldIndexes } from "../schema/define-schema";
+import { syncSchemaIndexes } from "../kit/index";
 
 type AnySchema = Schema<string, Record<string, FieldDefinition>>;
 
@@ -24,7 +22,6 @@ type AnySchema = Schema<string, Record<string, FieldDefinition>>;
  * const connectDb = createClient({
  *   serverless: true,
  *   schemas: [userSchema, postSchema] as const,
- *   syncIndexes: false, // Recommended for serverless
  *   validation: "strict"
  * });
  *
@@ -37,7 +34,10 @@ export interface ServerlessClientConfig<TSchemas extends readonly AnySchema[]> {
   serverless: true;
   /** Array of schemas to register (use `as const` for type inference) */
   schemas: TSchemas;
-  /** Whether to sync indexes on connect (default: false for serverless) */
+  /**
+   * @deprecated Avoid syncing indexes during startup. Prefer `mondel push` or a dedicated sync script.
+   * Whether to sync indexes on connect (default: false for serverless)
+   */
   syncIndexes?: boolean;
   /** Validation mode: "strict" | "loose" | "off" (default: "strict") */
   validation?: ValidationMode;
@@ -54,7 +54,6 @@ export interface ServerlessClientConfig<TSchemas extends readonly AnySchema[]> {
  * const db = await createClient({
  *   uri: process.env.MONGODB_URI,
  *   schemas: [userSchema, postSchema] as const,
- *   syncIndexes: true,
  *   validation: "strict"
  * });
  * ```
@@ -66,7 +65,10 @@ export interface NodeClientConfig<TSchemas extends readonly AnySchema[]> {
   uri: string;
   /** Array of schemas to register (use `as const` for type inference) */
   schemas: TSchemas;
-  /** Whether to sync indexes on connect (default: true) */
+  /**
+   * @deprecated Avoid syncing indexes during startup. Prefer `mondel push` or a dedicated sync script.
+   * Whether to sync indexes on connect (default: false)
+   */
   syncIndexes?: boolean;
   /** Validation mode: "strict" | "loose" | "off" (default: "strict") */
   validation?: ValidationMode;
@@ -105,47 +107,15 @@ export type SchemasToClient<TSchemas extends readonly AnySchema[]> = {
       : never;
 };
 
-async function syncIndexes(db: Db, schemas: readonly Schema[]): Promise<void> {
-  for (const schema of schemas) {
-    const collection = db.collection(schema.collection);
+let syncIndexesWarningShown = false;
 
-    const fieldIndexes = getFieldIndexes(schema);
-    for (const { field, options } of fieldIndexes) {
-      const indexSpec: IndexSpecification = {
-        [field]: options.type ?? 1,
-      };
-      const indexOptions: CreateIndexesOptions = {};
-
-      if (options.name) indexOptions.name = options.name;
-      if (options.unique) indexOptions.unique = options.unique;
-      if (options.sparse) indexOptions.sparse = options.sparse;
-      if (options.expireAfterSeconds !== undefined) {
-        indexOptions.expireAfterSeconds = options.expireAfterSeconds;
-      }
-      if (options.partialFilterExpression) {
-        indexOptions.partialFilterExpression = options.partialFilterExpression;
-      }
-
-      await collection.createIndex(indexSpec, indexOptions);
-    }
-
-    for (const index of schema.indexes) {
-      const indexSpec: IndexSpecification = index.fields as IndexSpecification;
-      const indexOptions: CreateIndexesOptions = {};
-
-      if (index.options?.name) indexOptions.name = index.options.name;
-      if (index.options?.unique) indexOptions.unique = index.options.unique;
-      if (index.options?.sparse) indexOptions.sparse = index.options.sparse;
-      if (index.options?.partialFilterExpression) {
-        indexOptions.partialFilterExpression = index.options.partialFilterExpression;
-      }
-      if (index.options?.weights) {
-        indexOptions.weights = index.options.weights;
-      }
-
-      await collection.createIndex(indexSpec, indexOptions);
-    }
-  }
+function warnSyncIndexesDeprecated(): void {
+  if (syncIndexesWarningShown) return;
+  syncIndexesWarningShown = true;
+  process.emitWarning(
+    "syncIndexes is deprecated and will be removed in a future major version. Use the `mondel push` CLI command or a dedicated sync script instead.",
+    "DeprecationWarning"
+  );
 }
 
 function createClientProxy<TSchemas extends readonly AnySchema[]>(
@@ -252,7 +222,6 @@ function createClientProxy<TSchemas extends readonly AnySchema[]>(
  * const connectDb = createClient({
  *   serverless: true,
  *   schemas,
- *   syncIndexes: false,
  *   validation: "strict"
  * });
  *
@@ -287,7 +256,6 @@ export function createClient<const TSchemas extends readonly AnySchema[]>(
  *   const db = await createClient({
  *     uri: process.env.MONGODB_URI!,
  *     schemas: [userSchema, postSchema] as const,
- *     syncIndexes: true,
  *     validation: "strict"
  *   });
  *
@@ -319,7 +287,8 @@ export function createClient<const TSchemas extends readonly AnySchema[]>(
       const db = client.db();
 
       if (shouldSyncIndexes) {
-        await syncIndexes(db, schemas);
+        warnSyncIndexesDeprecated();
+        await syncSchemaIndexes(db, schemas);
       }
 
       return createClientProxy(client, db, schemas, validation);
@@ -332,7 +301,8 @@ export function createClient<const TSchemas extends readonly AnySchema[]>(
       const db = client.db();
 
       if (shouldSyncIndexes) {
-        await syncIndexes(db, schemas);
+        warnSyncIndexesDeprecated();
+        await syncSchemaIndexes(db, schemas);
       }
 
       return createClientProxy(client, db, schemas, validation);

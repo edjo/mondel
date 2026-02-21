@@ -22,7 +22,12 @@ function createClient<S extends Schema[]>(
 | `serverless`  | `boolean`                      | Set to `true` to optimize for serverless environments (returns a factory).                               |
 | `uri`         | `string`                       | MongoDB connection URI. Required if `serverless: false`.                                                 |
 | `validation`  | `"strict" \| "loose" \| "off"` | Runtime validation strictness mode. Defaults to `"strict"`.                                              |
-| `syncIndexes` | `boolean`                      | Whether to automatically create indexes on connection. Defaults to `false` in both modes. |
+| `syncIndexes` | `boolean`                      | Deprecated. Legacy startup sync for indexes. Prefer `npx mondel push` in scripts/CI. |
+
+## CLI: `mondel`
+
+See the full CLI guide with all commands, flags, and config examples:
+- [/guide/cli](/guide/cli)
 
 ## `defineSchema`
 
